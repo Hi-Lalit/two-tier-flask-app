@@ -1,10 +1,12 @@
-# Use an official Python runtime as the base image
 FROM python:3.9-slim
 
-# Set the working directory
+# Remove pip root warning (safe for Docker on EC2)
+ENV PIP_ROOT_USER_ACTION=ignore
+
+# Create app directory
 WORKDIR /app
 
-# Install system dependencies
+# Install packages required for mysqlclient
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         gcc \
@@ -12,14 +14,14 @@ RUN apt-get update \
         pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first (for caching)
+# Copy requirements first (takes advantage of Docker caching)
 COPY requirements.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application
+# Copy application code
 COPY . .
 
-# Command to run the application
+# Start the app
 CMD ["python", "app.py"]
